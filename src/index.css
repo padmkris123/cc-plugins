@@ -1,0 +1,47 @@
+.break {
+  flex-wrap: wrap;
+}
+label.row > span {
+  color: #8E8E8E;
+  width: 20px;
+  text-align: right;
+  font-size: 9px;
+}
+label.row input {
+  flex: 1 1 auto;
+}
+.show {
+  display: block;
+}
+.hide {
+  display: none;
+}
+.dot {
+  height: 18px;
+  width: 18px;
+  border-radius: 50%;
+  display: inline-block;
+  margin-left: 8px;
+  margin-top: 8px;
+}
+.color1 {
+  background-color: #604986;
+}
+.color2 {
+  background-color: #589580;
+}
+.color3 {
+  background-color: #B6BE5B;
+}
+.color4 {
+  background-color: #C34F7B;
+}
+.color5 {
+  background-color: #7AB6B9;
+}
+.color6 {
+  background-color: #E6DD67;
+}
+.margin-8 {
+  margin-top: 8px;
+}

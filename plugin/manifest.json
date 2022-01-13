@@ -1,0 +1,54 @@
+{
+  "id": "MY_BACKGROUND_XD",
+  "name": "Artboard background plugin for panel",
+  "version": "1.0.0",
+  "host": {
+    "app": "XD",
+    "minVersion": "45.1"
+  },
+  "main": "index.html",
+  "manifestVersion": 4,
+  "entrypoints": [
+    {
+      "type": "panel",
+      "id": "createBackground",
+      "label": {
+        "default": "Create background"
+      },
+      "icons": [
+        {
+          "width": 24,
+          "height": 24,
+          "path": "icons/icon@1x.png"
+        },
+        {
+          "width": 48,
+          "height": 48,
+          "path": "icons/icon@2x.png"
+        }
+      ]
+    }
+  ],
+  "icons": [
+    {
+      "width": 48,
+      "height": 48,
+      "path": "icons/plugin.png",
+      "scale": [
+        1,
+        2
+      ],
+      "theme": [
+        "dark",
+        "darkest",
+        "medium",
+        "lightest",
+        "light",
+        "all"
+      ],
+      "species": [
+        "pluginList"
+      ]
+    }
+  ]
+}
