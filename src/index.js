@@ -120,56 +120,17 @@ function makeParentRectangle(color) {
           "_value": 0
         }
       },
-      "strokeStyle": { // TODO may be optional
+      "strokeStyle": {
         "_obj": "strokeStyle",
         "strokeStyleVersion": 2,
-        "strokeEnabled": true,
+        "strokeEnabled": false,
         "fillEnabled": true,
         "strokeStyleLineWidth": {
           "_unit": "pixelsUnit",
-          "_value": 1
-        },
-        "strokeStyleLineDashOffset": {
-          "_unit": "pointsUnit",
           "_value": 0
-        },
-        "strokeStyleMiterLimit": 100,
-        "strokeStyleLineCapType": {
-          "_enum": "strokeStyleLineCapType",
-          "_value": "strokeStyleButtCap"
-        },
-        "strokeStyleLineJoinType": {
-          "_enum": "strokeStyleLineJoinType",
-          "_value": "strokeStyleMiterJoin"
-        },
-        "strokeStyleLineAlignment": {
-          "_enum": "strokeStyleLineAlignment",
-          "_value": "strokeStyleAlignCenter"
-        },
-        "strokeStyleScaleLock": false,
-        "strokeStyleStrokeAdjust": false,
-        "strokeStyleLineDashSet": [],
-        "strokeStyleBlendMode": {
-          "_enum": "blendMode",
-          "_value": "normal"
-        },
-        "strokeStyleOpacity": {
-          "_unit": "percentUnit",
-          "_value": 100
-        },
-        "strokeStyleContent": {
-          "_obj": "solidColorLayer",
-          "color": {
-            "_obj": "RGBColor",
-            "red": 0,
-            "grain": 0,
-            "blue": 0
-          }
-        },
-        "strokeStyleResolution": 300
+        }
       }
     },
-    "layerID": 'pluginLayer0',
     "_isCommand": true
   },
   { // set opacity
@@ -340,7 +301,7 @@ function makeTriangles(idx, color) {
           "_value": 0
         }
       },
-      "strokeStyle": { // TODO may be optional
+      "strokeStyle": {
         "_obj": "strokeStyle",
         "strokeStyleVersion": 2,
         "strokeEnabled": false,
@@ -348,48 +309,9 @@ function makeTriangles(idx, color) {
         "strokeStyleLineWidth": {
           "_unit": "pixelsUnit",
           "_value": 0
-        },
-        "strokeStyleLineDashOffset": {
-          "_unit": "pointsUnit",
-          "_value": 0
-        },
-        "strokeStyleMiterLimit": 100,
-        "strokeStyleLineCapType": {
-          "_enum": "strokeStyleLineCapType",
-          "_value": "strokeStyleButtCap"
-        },
-        "strokeStyleLineJoinType": {
-          "_enum": "strokeStyleLineJoinType",
-          "_value": "strokeStyleMiterJoin"
-        },
-        "strokeStyleLineAlignment": {
-          "_enum": "strokeStyleLineAlignment",
-          "_value": "strokeStyleAlignCenter"
-        },
-        "strokeStyleScaleLock": false,
-        "strokeStyleStrokeAdjust": false,
-        "strokeStyleLineDashSet": [],
-        "strokeStyleBlendMode": {
-          "_enum": "blendMode",
-          "_value": "normal"
-        },
-        "strokeStyleOpacity": {
-          "_unit": "percentUnit",
-          "_value": 100
-        },
-        "strokeStyleContent": {
-          "_obj": "solidColorLayer",
-          "color": {
-            "_obj": "RGBColor",
-            "red": 0,
-            "grain": 0,
-            "blue": 0
-          }
-        },
-        "strokeStyleResolution": 300
+        }
       }
     },
-    "layerID": `pluginLayer${idx}`, // TODO may be does not matter. Could be optional
     "_isCommand": true
   },
   { // set opacity
@@ -428,9 +350,6 @@ function makeTriangles(idx, color) {
 }
 
 function transformTriangles() {
-  // offsets: to move around the triangle
-
-
   // width, height: % increase from previous w and h
   const widthInc = random(100, 200);
   const heightInc = random(100, 200);
@@ -452,17 +371,6 @@ function transformTriangles() {
       "_enum": "quadCenterState",
       "_value": "QCSAverage"
     },
-    // "offset": { // lets not move the triangle for the time being
-    //   "_obj": "offset",
-    //   "horizontal": {
-    //     "_unit": "pixelsUnit",
-    //     "_value": 716.1582259902023
-    //   },
-    //   "vertical": {
-    //     "_unit": "pixelsUnit",
-    //     "_value": -739.752880835006
-    //   }
-    // },
     "width": {
       "_unit": "percentUnit",
       "_value": widthInc
@@ -515,7 +423,11 @@ function random(min, max) {
   return Math.floor(Math.random() * (max - min) + min);
 }
 
-function rgb(color) { // color '89,191,90'
+/*
+Converts input color to rgb format
+Example: Input '55,56,57'; Output: {r: 55, g: 56, b: 57}
+*/
+function rgb(color) {
   const arr = color.split(',');
   return { r: parseInt(arr[0]), g: parseInt(arr[1]), b: parseInt(arr[2]) };
 }
