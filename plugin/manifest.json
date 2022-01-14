@@ -1,10 +1,10 @@
 {
-  "id": "MY_BACKGROUND_XD",
-  "name": "Artboard background plugin for panel",
+  "id": "MY_BACKGROUND_PS",
+  "name": "Background plugin",
   "version": "1.0.0",
   "host": {
-    "app": "XD",
-    "minVersion": "45.1"
+    "app": "PS",
+    "minVersion": "23.1.0"
   },
   "main": "index.html",
   "manifestVersion": 4,

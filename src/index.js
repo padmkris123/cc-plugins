@@ -1,96 +1,521 @@
 import "./index.css";
 
-const { entrypoints } = require("uxp");
+import { entrypoints, host } from "uxp";
+const app = require('photoshop').app
 
 entrypoints.setup({
   panels: {
     createBackground: {
-      show() {}
+      show() { }
     }
   }
 });
 
 window.addEventListener("load", () => {
-  const { Artboard } = require("scenegraph");
-  let form = document.querySelector("form");
-  let warning = document.querySelector("#warning");
-  if (!selection || !(selection.items[0] instanceof Artboard)) {
-    form.className = "hide";
-    warning.className = "show";
-  } else {
-    form.className = "show";
-    warning.className = "hide";
-    form.addEventListener("submit", create);
-  }
+  const form = document.querySelector("form");
+  form.addEventListener("submit", createShapes);
 });
 
-const { selection } = require("scenegraph");
 
-function create() {
-  const { editDocument } = require("application");
-  const { Path, Color } = require("scenegraph");
+function createShapes(e) {
+  if (host.name === "Photoshop") {
+    const { batchPlay } = require("photoshop").action;
+    const { executeAsModal } = require("photoshop").core;
 
-  // selected values from UI
-  const chaosSize = [3, 5, 8][document.querySelector("#chaos").value];
-  const color1 = document.querySelector("#color1").value;
-  const color2 = document.querySelector("#color2").value;
+    // Values from UI form
+    const chaosSize = [8, 11, 13][document.querySelector("#chaos").value];
+    const color1 = document.querySelector("#color1").value;
+    const color2 = document.querySelector("#color2").value;
 
-  editDocument({ editLabel: "Draw polygon" }, function (selection) {
-    const selectedArtboard = selection.items[0];
-    const maxHeight = selectedArtboard.height;
-    const maxWidth = selectedArtboard.width;
+    let commands = makeParentRectangle(rgb(color1)); // making sure background has some color
 
-    /*
-    Based on slider selection, pick the number of times polygons will be drawn on artboard 3, 5, 8
-    Imagine a line drawn side to side dividing the artboard into 2 halfs.
-    Create polygons for each half. Fill with color based on selection.
-
-    Range of each side w/ variable 
-    top - {0,0} {width, 0} // range: 0 to width
-    right - {width,0} {width, height} // range: 0 to height
-    bottom - {0, height} {width, height} // range: 0 to width
-    left - {0, 0} {0, height} // range: 0 to height
-    */
-
-
-    const getRandom = function (maxValue) {
-      return Math.floor(Math.random() * maxValue);
-    }
-
-    const polygons = [
-      { name: 'top-right-3', getCoords: function (maxW, maxH) { return `M ${getRandom(maxW)},0 ${maxW},0 ${maxW},${getRandom(maxH)} z`; } },
-      { name: 'right-bottom-3', getCoords: function (maxW, maxH) { return `M ${maxW},${getRandom(maxH)} ${maxW},${maxH} ${getRandom(maxW)},${maxH} z`; } },
-      { name: 'bottom-left-3', getCoords: function (maxW, maxH) { return `M ${getRandom(maxW)},${maxH} 0,${maxH} 0,${getRandom(maxH)} z`; } },
-      { name: 'left-top-3', getCoords: function (maxW, maxH) { return `M 0,${getRandom(maxH)} 0,0 ${getRandom(maxW)},0 z`; } },
-      { name: 'top-bottom-4', getCoords: function (maxW, maxH) { return `M ${getRandom(maxW)},0 ${maxW},0 ${maxW},${maxH} ${getRandom(maxW)},${maxH} z`; } },
-      { name: 'left-right-4', getCoords: function (maxW, maxH) { return `M 0,${getRandom(maxH)} 0,0 ${maxW},0 ${maxW},${getRandom(maxH)} z`; } }
-    ];
-    const otherHalfPolygons = [
-      { name: 'top-right-5', getCoords: function (maxW, maxH) { return `M ${getRandom(maxW)},0 ${maxW},${getRandom(maxH)} ${maxW},${maxH} 0,${maxH} 0,0 z`; } },
-      { name: 'right-bottom-5', getCoords: function (maxW, maxH) { return `M ${maxW},${getRandom(maxH)} ${getRandom(maxW)},${maxH} 0,${maxH} 0,0 ${maxW},0 z`; } },
-      { name: 'bottom-left-5', getCoords: function (maxW, maxH) { return `M ${getRandom(maxW)},${maxH} 0,${getRandom(maxH)} 0,0 ${maxW},0 ${maxW},${maxH} z`; } },
-      { name: 'left-top-5', getCoords: function (maxW, maxH) { return `M 0,${getRandom(maxH)} ${getRandom(maxW)},0 ${maxW},0 ${maxW},${maxH} 0,${maxH} z`; } },
-      { name: 'top-bottom-4', getCoords: function (maxW, maxH) { return `M ${getRandom(maxW)},0 0,0 0,${maxH} ${getRandom(maxW)},${maxH} z`; } },
-      { name: 'left-right-4', getCoords: function (maxW, maxH) { return `M 0,${getRandom(maxH)} 0,${maxH} ${maxW}${maxH} ${maxW},${getRandom(maxH)} z`; } }
-    ];
-
-    let i = 0;
+    // repeat drawing triangles
+    let idx = 1;
     do {
-      i++;
-      const selPolygonIdx = getRandom(6);
-      const polygon = polygons[selPolygonIdx];
-      const otherPolygon = otherHalfPolygons[selPolygonIdx];
+      commands = commands.concat(makeTriangles(idx, rgb(color2)));
+      commands = commands.concat(transformTriangles());
+      idx++;
+    } while (idx <= chaosSize)
 
-      const newPath = new Path();
-      newPath.pathData = polygon.getCoords(maxWidth, maxHeight);
-      newPath.fill = new Color(color1, Math.random() * (0.5 - 0.1) + 0.1); // max = 0.5 min 0.1
-      selection.insertionParent.addChild(newPath);
+    executeAsModal(() => {
+      batchPlay(commands, {synchronousExecution: true});
+    }, {
+      commandName: "Make background"
+    });
 
-      const newPath2 = new Path();
-      newPath2.pathData = otherPolygon.getCoords(maxWidth, maxHeight);
-      newPath2.fill = new Color(color2, Math.random() * (0.4 - 0.1) + 0.1); // max = 0.4 min 0.1
-      selection.insertionParent.addChild(newPath2);
+    executeAsModal(() => {
+      batchPlay(mergePluginLayers(chaosSize), {});
+    }, {
+      commandName: "Merge layers"
+    });
+  }
+}
 
-    } while (i < chaosSize);
-  })
+
+function makeParentRectangle(color) {
+  const doc = app.activeDocument;
+
+  return [{
+    "_obj": "select",
+    "_target": [
+      {
+        "_ref": "rectangleTool"
+      }
+    ],
+    "dontRecord": true,
+    "forceNotify": true,
+    "_isCommand": false
+  },
+  { // draw rectangle
+    "_obj": "make",
+    "_target": [
+      {
+        "_ref": "contentLayer"
+      }
+    ],
+    "using": {
+      "_obj": "contentLayer",
+      "type": {
+        "_obj": "solidColorLayer",
+        "color": {
+          "_obj": "RGBColor",
+          "red": color.r,
+          "grain": color.g,
+          "blue": color.b
+        }
+      },
+      "shape": {
+        "_obj": "rectangle",
+        "unitValueQuadVersion": 1,
+        "top": {
+          "_unit": "pixelsUnit",
+          "_value": 0
+        },
+        "left": {
+          "_unit": "pixelsUnit",
+          "_value": 0
+        },
+        "bottom": {
+          "_unit": "pixelsUnit",
+          "_value": doc.height
+        },
+        "right": {
+          "_unit": "pixelsUnit",
+          "_value": doc.width
+        },
+        "topRight": {
+          "_unit": "pixelsUnit",
+          "_value": 0
+        },
+        "topLeft": {
+          "_unit": "pixelsUnit",
+          "_value": 0
+        },
+        "bottomLeft": {
+          "_unit": "pixelsUnit",
+          "_value": 0
+        },
+        "bottomRight": {
+          "_unit": "pixelsUnit",
+          "_value": 0
+        }
+      },
+      "strokeStyle": { // TODO may be optional
+        "_obj": "strokeStyle",
+        "strokeStyleVersion": 2,
+        "strokeEnabled": true,
+        "fillEnabled": true,
+        "strokeStyleLineWidth": {
+          "_unit": "pixelsUnit",
+          "_value": 1
+        },
+        "strokeStyleLineDashOffset": {
+          "_unit": "pointsUnit",
+          "_value": 0
+        },
+        "strokeStyleMiterLimit": 100,
+        "strokeStyleLineCapType": {
+          "_enum": "strokeStyleLineCapType",
+          "_value": "strokeStyleButtCap"
+        },
+        "strokeStyleLineJoinType": {
+          "_enum": "strokeStyleLineJoinType",
+          "_value": "strokeStyleMiterJoin"
+        },
+        "strokeStyleLineAlignment": {
+          "_enum": "strokeStyleLineAlignment",
+          "_value": "strokeStyleAlignCenter"
+        },
+        "strokeStyleScaleLock": false,
+        "strokeStyleStrokeAdjust": false,
+        "strokeStyleLineDashSet": [],
+        "strokeStyleBlendMode": {
+          "_enum": "blendMode",
+          "_value": "normal"
+        },
+        "strokeStyleOpacity": {
+          "_unit": "percentUnit",
+          "_value": 100
+        },
+        "strokeStyleContent": {
+          "_obj": "solidColorLayer",
+          "color": {
+            "_obj": "RGBColor",
+            "red": 0,
+            "grain": 0,
+            "blue": 0
+          }
+        },
+        "strokeStyleResolution": 300
+      }
+    },
+    "layerID": 'pluginLayer0',
+    "_isCommand": true
+  },
+  { // set opacity
+    "_obj": "set",
+    "_target": [
+      {
+        "_ref": "layer",
+        "_enum": "ordinal",
+        "_value": "targetEnum"
+      }
+    ],
+    "to": {
+      "_obj": "layer",
+      "opacity": {
+        "_unit": "percentUnit",
+        "_value": random(5, 35)
+      }
+    },
+    "_isCommand": true
+  },
+  { // set name of layer
+    "_obj": "set",
+    "_target": [
+      {
+        "_ref": "layer",
+        "_enum": "ordinal",
+        "_value": "targetEnum"
+      }
+    ],
+    "to": {
+      "_obj": "layer",
+      "name": "pluginLayer0"
+    },
+    "_isCommand": true
+  }
+  ];
+}
+
+function makeTriangles(idx, color) {
+  const doc = app.activeDocument;
+  const maxW = doc.width;
+  const maxH = doc.height;
+
+  const horizontal1 = random(1, maxW);
+  const horizontal2 = random(1, maxW);
+  const vertical1 = random(1, maxH);
+  const vertical2 = random(1, maxH);
+
+  return [{
+    "_obj": "select",
+    "_target": [
+      {
+        "_ref": "triangleTool"
+      }
+    ],
+    "dontRecord": true,
+    "forceNotify": true,
+    "_isCommand": false
+  },
+  {
+    "_obj": "make",
+    "_target": [
+      {
+        "_ref": "contentLayer"
+      }
+    ],
+    "using": {
+      "_obj": "contentLayer",
+      "type": {
+        "_obj": "solidColorLayer",
+        "color": {
+          "_obj": "RGBColor",
+          "red": color.r,
+          "grain": color.g,
+          "blue": color.b
+        }
+      },
+      "shape": {
+        "_obj": "triangle",
+        "keyOriginType": 7,
+        "keyOriginBoxCorners": {
+          "rectangleCornerA": {
+            "_obj": "paint",
+            "horizontal": horizontal1,
+            "vertical": vertical1
+          },
+          "rectangleCornerB": {
+            "_obj": "paint",
+            "horizontal": horizontal2,
+            "vertical": vertical1
+          },
+          "rectangleCornerC": {
+            "_obj": "paint",
+            "horizontal": horizontal2,
+            "vertical": vertical2
+          },
+          "rectangleCornerD": {
+            "_obj": "paint",
+            "horizontal": horizontal1,
+            "vertical": vertical2
+          }
+        },
+        "keyOriginPolySides": 3,
+        "keyOriginShapeBBox": {
+          "_obj": "classFloatRect",
+          "top": vertical1,
+          "left": horizontal1,
+          "bottom": vertical2,
+          "right": horizontal2
+        },
+        "keyOriginPolyPreviousTightBoxCorners": {
+          "rectangleCornerA": {
+            "_obj": "paint",
+            "horizontal": horizontal1,
+            "vertical": vertical1
+          },
+          "rectangleCornerB": {
+            "_obj": "paint",
+            "horizontal": horizontal2,
+            "vertical": vertical1
+          },
+          "rectangleCornerC": {
+            "_obj": "paint",
+            "horizontal": horizontal2,
+            "vertical": vertical2
+          },
+          "rectangleCornerD": {
+            "_obj": "paint",
+            "horizontal": horizontal1,
+            "vertical": vertical2
+          }
+        },
+        "keyOriginPolyTrueRectCorners": {
+          "rectangleCornerA": {
+            "_obj": "paint",
+            "horizontal": horizontal1,
+            "vertical": vertical1
+          },
+          "rectangleCornerB": {
+            "_obj": "paint",
+            "horizontal": horizontal2,
+            "vertical": vertical1
+          },
+          "rectangleCornerC": {
+            "_obj": "paint",
+            "horizontal": horizontal2,
+            "vertical": vertical2
+          },
+          "rectangleCornerD": {
+            "_obj": "paint",
+            "horizontal": horizontal1,
+            "vertical": vertical2
+          }
+        },
+        "keyOriginPolyPixelHSF": 1,
+        "transform": {
+          "_obj": "transform",
+          "xx": 1,
+          "xy": 0,
+          "yx": 0,
+          "yy": 1,
+          "tx": 0,
+          "ty": 0
+        },
+        "sides": 3,
+        "polygonCornerRadius": {
+          "_unit": "pixelsUnit",
+          "_value": 0
+        }
+      },
+      "strokeStyle": { // TODO may be optional
+        "_obj": "strokeStyle",
+        "strokeStyleVersion": 2,
+        "strokeEnabled": false,
+        "fillEnabled": true,
+        "strokeStyleLineWidth": {
+          "_unit": "pixelsUnit",
+          "_value": 0
+        },
+        "strokeStyleLineDashOffset": {
+          "_unit": "pointsUnit",
+          "_value": 0
+        },
+        "strokeStyleMiterLimit": 100,
+        "strokeStyleLineCapType": {
+          "_enum": "strokeStyleLineCapType",
+          "_value": "strokeStyleButtCap"
+        },
+        "strokeStyleLineJoinType": {
+          "_enum": "strokeStyleLineJoinType",
+          "_value": "strokeStyleMiterJoin"
+        },
+        "strokeStyleLineAlignment": {
+          "_enum": "strokeStyleLineAlignment",
+          "_value": "strokeStyleAlignCenter"
+        },
+        "strokeStyleScaleLock": false,
+        "strokeStyleStrokeAdjust": false,
+        "strokeStyleLineDashSet": [],
+        "strokeStyleBlendMode": {
+          "_enum": "blendMode",
+          "_value": "normal"
+        },
+        "strokeStyleOpacity": {
+          "_unit": "percentUnit",
+          "_value": 100
+        },
+        "strokeStyleContent": {
+          "_obj": "solidColorLayer",
+          "color": {
+            "_obj": "RGBColor",
+            "red": 0,
+            "grain": 0,
+            "blue": 0
+          }
+        },
+        "strokeStyleResolution": 300
+      }
+    },
+    "layerID": `pluginLayer${idx}`, // TODO may be does not matter. Could be optional
+    "_isCommand": true
+  },
+  { // set opacity
+    "_obj": "set",
+    "_target": [
+      {
+        "_ref": "layer",
+        "_enum": "ordinal",
+        "_value": "targetEnum"
+      }
+    ],
+    "to": {
+      "_obj": "layer",
+      "opacity": {
+        "_unit": "percentUnit",
+        "_value": random(5, 35)
+      }
+    },
+    "_isCommand": true
+  },
+  { // set layer name
+    "_obj": "set",
+    "_target": [
+      {
+        "_ref": "layer",
+        "_enum": "ordinal",
+        "_value": "targetEnum"
+      }
+    ],
+    "to": {
+      "_obj": "layer",
+      "name": `pluginLayer${idx}`
+    },
+    "_isCommand": true
+  }];
+}
+
+function transformTriangles() {
+  // offsets: to move around the triangle
+
+
+  // width, height: % increase from previous w and h
+  const widthInc = random(100, 200);
+  const heightInc = random(100, 200);
+
+  // angle units +90 to -90
+  const horizontalSkew = random(-90, 90);
+  const verticalSkew = random(-90, 90);
+
+  return [{
+    "_obj": "transform",
+    "_target": [
+      {
+        "_ref": "path",
+        "_enum": "ordinal",
+        "_value": "targetEnum"
+      }
+    ],
+    "freeTransformCenterState": {
+      "_enum": "quadCenterState",
+      "_value": "QCSAverage"
+    },
+    // "offset": { // lets not move the triangle for the time being
+    //   "_obj": "offset",
+    //   "horizontal": {
+    //     "_unit": "pixelsUnit",
+    //     "_value": 716.1582259902023
+    //   },
+    //   "vertical": {
+    //     "_unit": "pixelsUnit",
+    //     "_value": -739.752880835006
+    //   }
+    // },
+    "width": {
+      "_unit": "percentUnit",
+      "_value": widthInc
+    },
+    "height": {
+      "_unit": "percentUnit",
+      "_value": heightInc
+    },
+    "skew": {
+      "_obj": "paint",
+      "horizontal": {
+        "_unit": "angleUnit",
+        "_value": horizontalSkew
+      },
+      "vertical": {
+        "_unit": "angleUnit",
+        "_value": verticalSkew
+      }
+    },
+    "linked": true,
+    "_isCommand": true
+  }];
+}
+
+
+function mergePluginLayers(lastLayerIdx) {
+  const allLayers = app.activeDocument.layers;
+  return [{
+    "_obj": "select",
+    "_target": [
+      {
+        "_ref": "layer",
+        "_name": `pluginLayer${lastLayerIdx}`
+      }
+    ],
+    "selectionModifier": {
+      "_enum": "selectionModifierType",
+      "_value": "addToSelection"
+    },
+    "makeVisible": false,
+    "layerID": allLayers.filter(l => l.name.startsWith('pluginLayer')).map(l => l.id),
+    "_isCommand": true
+  }, {
+    "_obj": "mergeVisible",
+    "_isCommand": true
+ }]
+}
+
+function random(min, max) {
+  return Math.floor(Math.random() * (max - min) + min);
+}
+
+function rgb(color) { // color '89,191,90'
+  const arr = color.split(',');
+  return { r: parseInt(arr[0]), g: parseInt(arr[1]), b: parseInt(arr[2]) };
 }

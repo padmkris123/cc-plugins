@@ -1,11 +1,11 @@
 {
-  "name": "MY_BACKGROUND_XD",
+  "name": "MY_BACKGROUND_PS",
   "version": "1.0.0",
   "private": true,
   "scripts": {
     "watch": "webpack -w --mode development",
     "build": "webpack --mode development",
-    "build-xd": "yarn build --env=mode=XD"
+    "build-ps": "yarn build --env=mode=PS"
   },
   "devDependencies": {
     "@babel/core": "^7.14.6",
