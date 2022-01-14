@@ -1,8 +1,11 @@
-# Getting started
+# Introduction
 
-This sample plugin is a persistent panel. Users can increase the width and height of the selected rectangle by inputing pixel values in the panel.
-[Read the step-by-step guide for this sample](https://adobexdplatform.com/plugin-docs/tutorials/quick-start-panel/).
+This panel plugin creates a colorful background with random shapes and sizes. Intended to be used on a selected artboard as the first step.
 
-## Usage
 
-1. Run "Artboard background plugin for panel > Create Background"
+# Usage
+
+1. npm i
+2. For dev build `npm run build`
+3. For prod build `npm run build-xd`
+4. Open plugin from XD "Plugins -> Background plugin -> Create Background"

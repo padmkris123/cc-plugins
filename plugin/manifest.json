@@ -1,6 +1,6 @@
 {
   "id": "MY_BACKGROUND_XD",
-  "name": "Artboard background plugin for panel",
+  "name": "Background plugin",
   "version": "1.0.0",
   "host": {
     "app": "XD",
