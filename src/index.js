@@ -24,15 +24,14 @@ function createShapes(e) {
 
     // Values from UI form
     const chaosSize = [8, 11, 13][document.querySelector("#chaos").value];
-    const color1 = document.querySelector("#color1").value;
-    const color2 = document.querySelector("#color2").value;
+    const colors = [document.querySelector("#color1").value, document.querySelector("#color2").value];
 
-    let commands = makeParentRectangle(rgb(color1)); // making sure background has some color
+    let commands = makeParentRectangle(rgb(colors[random(0,2)])); // making sure background has some color
 
     // repeat drawing triangles
     let idx = 1;
     do {
-      commands = commands.concat(makeTriangles(idx, rgb(color2)));
+      commands = commands.concat(makeTriangles(idx, rgb(colors[random(0,2)])));
       commands = commands.concat(transformTriangles());
       idx++;
     } while (idx <= chaosSize)
